@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smarthomes</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Smarthome</h1>
+        <nav class="room-nav">
+            <button class="room-btn active" data-room="kitchen">Küche</button>
+            <button class="room-btn" data-room="bathroom">Badezimmer</button>
+            <button class="room-btn" data-room="bedroom1">Jans Zimmer</button>
+            <button class="room-btn" data-room="bedroom2">Mamas Zimmer</button>
+        </nav>
+    </header>
+
+    <main>
+        <div class="card">
+            <span class="card-label">Temperature</span>
+            <span class="card-value" id="temperature">--</span>
+            <span class="card-unit">°C</span>
+        </div>
+        
+        <div class="card">
+            <span class="card-label">Luftfeuchtigkeit</span>
+            <span class="card-unit" id="humidity">--</span>
+            <span class="card-unit">%</span>
+        </div>
+
+        <div class="card" id="light-card">
+            <span class="card-label">Licht</span>
+            <span class="card-value" id="light">--</span>
+        </div>
+    </main>
+
+    <footer>
+        <span id="status">Wähle ein Raum aus</span>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# Build directories
+build/
+cmake-build-debug/
+cmake-build-release/
+dist/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Executables and object files
+*.o
+*.so
+*.a
+*.exe
+*.out
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Dependencies
+node_modules/
+*.log
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.tmp
+
+# Compiler output
+*.d
+*.su
