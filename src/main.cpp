@@ -8,47 +8,8 @@
 
 // using json = nlohmann::json;
 
-enum IPFlag :   uint32_t
-{
-    FLAG_NONE           = 0,
-    FLAG_BLACKLISTED    = 1 << 0,
-    FLAG_WHITELISTED    = 1 << 1,
-    FLAG_HIGH_TRAFIC    = 1 << 2,
-    FLAG_RATE_LIMITED   = 1 << 3,
-    FLAG_SCANNER        = 1 << 4,
-    FLAG_MALICIOUS      = 1 << 5,
-    FLAG_INTERNAL       = 1 << 6
-};
-
-struct IPEntry
-{
-    uint32_t addr;
-    uint32_t flags;
-    int callCount;
-};
-
-bool hasFlag(const IPEntry &entry, IPFlag flag)
-{
-    return (entry.flags & flag) != 0;
-}
-
 int main()
 {
-
-    IPEntry entry;
-
-    entry.addr = 123921;
-    entry.callCount = 2042;
-
-
-    if (entry.callCount > 1000)
-    {
-        entry.flags = FLAG_RATE_LIMITED | FLAG_MALICIOUS;
-    }
-
-    std::cout << "Maybe "<< entry.flags;
-
-
 
     // crow::SimpleApp app;
 

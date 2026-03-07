@@ -3,14 +3,15 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "config_ip.h"
 
 enum IpFlags{
         IP_FLAG_NONE = 0,
-        IP_FLAG_INTERNAL = 1 << 1,
-        IP_FLAG_WHITELISTED = 1 << 2,
-        IP_FLAG_BLACKLISTED = 1 << 3,
-        IP_FLAG_MALICIOUS = 1 << 4,
-        IP_FLAG_FLAG_SCANNER = 1 << 5,
+        IP_FLAG_INTERNAL = 1 << 0,
+        IP_FLAG_WHITELISTED = 1 << 1,
+        IP_FLAG_BLACKLISTED = 1 << 2,
+        IP_FLAG_MALICIOUS = 1 << 3,
+        IP_FLAG_FLAG_SCANNER = 1 << 4,
 };
 
 struct ipHandler
@@ -36,8 +37,6 @@ int main()
 {
         const char testIpv6[] = "2a01:0db8:85a3:0000:0000:8a2e:0370:7334";
         const char testIpv4[] = "191.128.1.1";
-        struct sockaddr_in sa;
-        uint32_t bin;
         struct ipHandler entryv6;
         struct ipHandler entryv4;
         IpHandler_init(&entryv4);
@@ -47,13 +46,19 @@ int main()
         inet_pton(AF_INET, testIpv4, &entryv4.address.ipv4);
         inet_pton(AF_INET6, testIpv6, &entryv6.address.ipv6);
 
-        char str6[INET6_ADDRSTRLEN];
-        char tmp[INET6_ADDRSTRLEN];
-        inet_ntop(AF_INET6, &entryv6.address.ipv6, str6, INET6_ADDRSTRLEN);
-        inet_ntop(AF_INET, &entryv4.address.ipv4, tmp, INET_ADDRSTRLEN);
+        entryv4.callCount = 2121;
 
-        printf("ipv4: %s\n", tmp);
-        printf("ipv6: %s\n", str6);
+        if (entryv4.callCount > MAX_CALLCOUNT) entryv4.flags = IP_FLAG_FLAG_SCANNER | IP_FLAG_MALICIOUS;
+
+        entryv6.flags = IP_FLAG_INTERNAL | IP_FLAG_WHITELISTED;
+
+        // char str6[INET6_ADDRSTRLEN];
+        // char tmp[INET6_ADDRSTRLEN];
+        // inet_ntop(AF_INET6, &entryv6.address.ipv6, str6, INET6_ADDRSTRLEN);
+        // inet_ntop(AF_INET, &entryv4.address.ipv4, tmp, INET_ADDRSTRLEN);
+
+        // printf("White: %s\n", WHITELISTED_FILE_PATH);
+        // printf("Ban: %s\n", BAN_FILE_PATH);
 
         return 0;
 }
