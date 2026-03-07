@@ -27,13 +27,26 @@ struct IPEntry
     int callCount;
 };
 
+bool hasFlag(const IPEntry &entry, IPFlag flag)
+{
+    return (entry.flags & flag) != 0;
+}
 
 int main()
 {
 
-    uint32_t lolcat = FLAG_WHITELISTED | FLAG_INTERNAL;
+    IPEntry entry;
 
-    std::cout << "Maybe "<< lolcat;
+    entry.addr = 123921;
+    entry.callCount = 2042;
+
+
+    if (entry.callCount > 1000)
+    {
+        entry.flags = FLAG_RATE_LIMITED | FLAG_MALICIOUS;
+    }
+
+    std::cout << "Maybe "<< entry.flags;
 
 
 
