@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include "server_config.h"
 #include "ip_utils.h"
-#include "server_config.h"
 
 static const char *HTML_INDEX = "<html><body><h1>Hello from microhttpd!</h1></body></html>";
 static const char *HTML_404 = "<html><body><h1>404 Not Found</h1></body></html>";
