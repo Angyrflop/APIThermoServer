@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include <openssl/evp.h>
 #include <sys/socket.h>
 #include "config_ip.h"
@@ -71,6 +72,25 @@ void checkCallCount(ipEntry *entry)
                 entry->flags |= IP_FLAG_SCANNER | IP_FLAG_BLACKLISTED; /*20*/
 }
 
+
+int findIp(dynArray *arr, ipEntry entry)
+{
+    if (entry.isIpv6 == true) {
+        for (int i = 0; i < arr->size; i++) {
+        if (memcmp(&arr->data[i].address.ipv6, &entry.address.ipv6, sizeof(entry.address.ipv6)) == 0)
+            return -1;
+        }
+    }
+    if (entry.isIpv6 == false) {
+        for (int i = 0; i < arr->size; i++) {
+            if (memcmp(&arr->data[i].address.ipv4, &entry.address.ipv4, sizeof(entry.address.ipv4)) == 0)
+                return -1;
+        }
+    }
+    return 0;
+}
+
+
 int addIp(dynArray *arr, const union MHD_ConnectionInfo *info)
 {
    if (info == NULL)
@@ -81,7 +101,8 @@ int addIp(dynArray *arr, const union MHD_ConnectionInfo *info)
         ipEntry entry;
         ipEntry_init(&entry);
         entry.address.ipv4 = addr4->sin_addr;
-        dynArray_push(arr, entry);
+        if (findIp(arr, entry) == 0)
+            dynArray_push(arr, entry);
         return 0;
     }
    if (addr->sa_family == AF_INET6) {
@@ -90,7 +111,8 @@ int addIp(dynArray *arr, const union MHD_ConnectionInfo *info)
        ipEntry_init(&entry);
        entry.isIpv6 = true;
        entry.address.ipv6 = addr6->sin6_addr;
-       dynArray_push(arr, entry);
+       if (findIp(arr, entry) == 0)
+           dynArray_push(arr, entry);
        return 0;
    }
    return -1;
