@@ -34,8 +34,6 @@ static enum MHD_Result handler(
         printf("'/' Called\n");
         const union MHD_ConnectionInfo *info = 
             MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
-        ipEntry entry;
-        ipEntry_init(&entry);
         addIp(map, info);
         body = HTML_INDEX;
         status = MHD_HTTP_OK;
