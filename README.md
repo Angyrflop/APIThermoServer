@@ -31,13 +31,13 @@ Edit the relevant config headers before building:
 ## How it works
 
 1. An HTTP server starts and listens on the configured port.
-2. Each incoming connection's IP is recorded in a dynamic array.
+2. Each incoming connection's IP is recorded in a dynamic hash map.
 3. On shutdown, the IP list is written to a binary file with a SHA-256 checksum.
 4. On startup, the file is read back and the checksum is verified before use.
 
 ## File format
 ```
-[magic number (8 bytes)] [entry count (4 bytes)] [ipEntry × count] [SHA-256 checksum (32 bytes)]
+[magic number (8 bytes)] [entry count (8 bytes)] [ipEntry × count] [SHA-256 checksum (32 bytes)]
 ```
 
 ## TODO
