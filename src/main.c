@@ -9,6 +9,7 @@
 #include <microhttpd.h>
 #include <unistd.h>
 #include <stdio.h>
+#include "read_write_handler.h"
 #include "server_config.h"
 #include "ip_utils.h"
 #include "hashmap.h"
@@ -63,6 +64,12 @@ static enum MHD_Result handler(
 int main() {
     hashmap_t map;
     hashmap_init(&map);
+    if (readIPFile(&map) == -1)
+    {
+        printf("[STARTUP] FAILED TO READ FILE!!!\n");
+        if (ABORT_IF_FILE_IS_EMPTY == true)
+            return -1;
+    }
     struct MHD_Daemon *daemon = MHD_start_daemon(
             MHD_USE_INTERNAL_POLLING_THREAD,
             PORT,
@@ -94,6 +101,7 @@ int main() {
             printf("IPv4: %s\n", buf);
         }
     }
+    writeIPFile(&map);
     hashmap_free(&map);
     MHD_stop_daemon(daemon);
 return 0;

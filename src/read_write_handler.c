@@ -11,7 +11,7 @@
 #include "checksum_handler.h"
 #include "hashmap.h"
 
-int writeFile(const hashmap_t *map)
+int writeIPFile(const hashmap_t *map)
 {
     uint8_t checksum[EVP_MAX_MD_SIZE];
     unsigned int checksumLen;
@@ -22,18 +22,22 @@ int writeFile(const hashmap_t *map)
         return -1;
     fwrite(&MAGIC, sizeof(MAGIC), 1, out);
     fwrite(&map->size, sizeof(size_t), 1, out);
-    fwrite(map->slots, sizeof(ipEntry), map->size, out);
+    for (size_t i = 0; i < map->capacity; i++) {
+        if (!map->slots[i].isOccupied)
+            continue;
+        fwrite(&map->slots[i], sizeof(ipEntry), 1, out);
+    }
     fwrite(checksum, checksumLen, 1, out);
     fclose(out);
     return 0;
 }
 
-int readFile(hashmap_t *map)
+int readIPFile(hashmap_t *map)
 {
     uint8_t fileChecksum[EVP_MAX_MD_SIZE];
     uint8_t ComputedChecksum[EVP_MAX_MD_SIZE];
     unsigned int computedChecksumLen;
-    int count;
+    size_t count;
     FILE *in = fopen(IP_FILE_PATH, "rb");
     if (in == NULL)
         return -1;
@@ -41,10 +45,11 @@ int readFile(hashmap_t *map)
     fread(&rMagic, sizeof(MAGIC), 1, in);
     if (rMagic != MAGIC) {
         fclose(in);
+        printf("penis");
         return -1;
     }
     fread(&count, sizeof(size_t), 1, in);
-    for (int i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
         ipEntry entry;
         fread(&entry, sizeof(ipEntry), 1, in);
         hashmap_insert(map, entry);
