@@ -1,5 +1,6 @@
 // Copyright (c) goes to Jan Oliver Quant
 /*Make it more readable it sucks so hard rn ;C*/
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <openssl/evp.h>
@@ -8,25 +9,26 @@
 #include "ip_utils.h"
 #include "read_write_handler.h"
 #include "checksum_handler.h"
+#include "hashmap.h"
 
-int writeFile(dynArray *arr)
+int writeFile(const hashmap_t *map)
 {
     uint8_t checksum[EVP_MAX_MD_SIZE];
     unsigned int checksumLen;
-    if (genChecksum(arr, checksum, &checksumLen) == -1)
+    if (genChecksum(map, checksum, &checksumLen) == -1)
         return -1;
     FILE *out = fopen(IP_FILE_PATH, "wb");
     if (out == NULL)
         return -1;
     fwrite(&MAGIC, sizeof(MAGIC), 1, out);
-    fwrite(&arr->size, sizeof(int), 1, out);
-    fwrite(arr->data, sizeof(ipEntry), arr->size, out);
+    fwrite(&map->size, sizeof(size_t), 1, out);
+    fwrite(map->slots, sizeof(ipEntry), map->size, out);
     fwrite(checksum, checksumLen, 1, out);
     fclose(out);
     return 0;
 }
 
-int readFile(dynArray *arr)
+int readFile(hashmap_t *map)
 {
     uint8_t fileChecksum[EVP_MAX_MD_SIZE];
     uint8_t ComputedChecksum[EVP_MAX_MD_SIZE];
@@ -41,16 +43,16 @@ int readFile(dynArray *arr)
         fclose(in);
         return -1;
     }
-    fread(&count, sizeof(int), 1, in);
+    fread(&count, sizeof(size_t), 1, in);
     for (int i = 0; i < count; i++) {
         ipEntry entry;
         fread(&entry, sizeof(ipEntry), 1, in);
-        dynArray_push(arr, entry);
+        hashmap_insert(map, entry);
     }
     int checksumLen = EVP_MD_size(EVP_sha256());
     fread(&fileChecksum, checksumLen, 1, in);
     fclose(in);
-    if (genChecksum(arr, ComputedChecksum, &computedChecksumLen) == -1)
+    if (genChecksum(map, ComputedChecksum, &computedChecksumLen) == -1)
         return -1;
     if (memcmp(fileChecksum, ComputedChecksum, computedChecksumLen) != 0)
         return -1;

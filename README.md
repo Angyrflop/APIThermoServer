@@ -5,8 +5,8 @@
 
 - Tracks IPv4 and IPv6 connections via an embedded HTTP server
 - Flags suspicious IPs (Work in progress)
-- Persists IP entries to a binary file with SHA-256 checksum verification
-- Dynamic array for in-memory IP storage
+- Persists IP entries to a binary file with SHA-256 checksum verification (Work in progress)
+- Dynamic hashmap for in-memory IP storage
 
 ## Dependencies
 
@@ -25,9 +25,9 @@ ninja
 Edit the relevant config headers before building:
 | Header | Purpose |
 |---|---|
-| `config_ip.h` | IP file path, starting capacity |
+| `config_ip.h` | IP file path, enum flags |
 | `server_config.h` | Port, homepage route |
-
+| `hashmap.h` | FNV offset and prime, starting capacity |
 ## How it works
 
 1. An HTTP server starts and listens on the configured port.
@@ -46,7 +46,7 @@ Edit the relevant config headers before building:
 - [ ] Writing and reading IP list
 - [ ] Rate limiting
 - [ ] Anomaly detection
-- [ ] Replace the dynamic array with a hash map
+- [x] Replace the dynamic array with a hash map
 - [ ] Finish and tidy up the project
 
 ## License

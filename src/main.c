@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include "server_config.h"
 #include "ip_utils.h"
+#include "hashmap.h"
 
 static const char *HTML_INDEX = "<html><body><h1>Hello from microhttpd!</h1></body></html>";
 static const char *HTML_404 = "<html><body><h1>404 Not Found</h1></body></html>";
@@ -27,13 +28,15 @@ static enum MHD_Result handler(
 {
     const char *body;
     unsigned int status;
-    dynArray *arr = (dynArray *) cls;
+    hashmap_t *map = (hashmap_t *) cls;
 
     if (strcmp(url, HOMEPAGE) == 0) {
         printf("'/' Called\n");
         const union MHD_ConnectionInfo *info = 
             MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
-         addIp(arr, info);
+        ipEntry entry;
+        ipEntry_init(&entry);
+        addIp(map, info);
         body = HTML_INDEX;
         status = MHD_HTTP_OK;
     } else if (strcmp(url, "/bathroom") == 0) {
@@ -58,13 +61,13 @@ static enum MHD_Result handler(
 }
 
 int main() {
-    dynArray arr;
-    dynArray_init(&arr);
+    hashmap_t map;
+    hashmap_init(&map);
     struct MHD_Daemon *daemon = MHD_start_daemon(
             MHD_USE_INTERNAL_POLLING_THREAD,
             PORT,
             NULL, NULL,
-            &handler, &arr,
+            &handler, &map,
             MHD_OPTION_END
     );
 
@@ -76,19 +79,22 @@ int main() {
     printf("Listening on port %d...\n", PORT);
     getchar();
 
-    printf("%d", arr.size);
 
-    for (int i = 0; i < arr.size; i++) {
-        char buf[INET6_ADDRSTRLEN];
-        if (arr.data[i].isIpv6 == true) {
-            inet_ntop(AF_INET6, &arr.data[i].address.ipv6, buf, sizeof(buf));
-            printf("Ip[%d]: %s\n", i, buf);
-        }
-        if (arr.data[i].isIpv6 == false) {
-            inet_ntop(AF_INET, &arr.data[i].address.ipv4, buf, sizeof(buf));
-            printf("Ip[%d]: %s\n", i, buf); 
+    for (size_t i = 0; i < map.capacity; i++) {
+        if (!map.slots[i].isOccupied)
+            continue;
+        printf("I[%zu]:\n", i);
+        if (map.slots[i].isIpv6 == true) {
+            char buf[INET6_ADDRSTRLEN];
+            inet_ntop(AF_INET6, &map.slots[i].address.ipv6, buf, sizeof(buf));
+            printf("IPv6: %s\n", buf);
+        } else {
+            char buf[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &map.slots[i].address.ipv4, buf, sizeof(buf));
+            printf("IPv4: %s\n", buf);
         }
     }
+    hashmap_free(&map);
     MHD_stop_daemon(daemon);
 return 0;
 }
