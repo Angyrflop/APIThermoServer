@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <openssl/evp.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "config_ip.h"
 #include "ip_utils.h"
 #include "read_write_handler.h"
@@ -45,7 +47,6 @@ int readIPFile(hashmap_t *map)
     fread(&rMagic, sizeof(MAGIC), 1, in);
     if (rMagic != MAGIC) {
         fclose(in);
-        printf("penis");
         return -1;
     }
     fread(&count, sizeof(size_t), 1, in);
@@ -61,6 +62,25 @@ int readIPFile(hashmap_t *map)
         return -1;
     if (memcmp(fileChecksum, ComputedChecksum, computedChecksumLen) != 0)
         return -1;
+    return 0;
+}
+
+int getStatic(char **file, char *fileName)
+{
+    FILE *in = fopen(fileName, "rb");
+    if (in == NULL)
+        return -1;
+    fseek(in, 0, SEEK_END);
+    long filesize = ftell(in);
+    rewind(in);
+    *file = malloc(filesize + 1);
+    if (*file == NULL) {
+        fclose(in);
+        return -1;
+    }
+    size_t bytesRead = fread(*file, 1, filesize, in);
+    (*file)[bytesRead] = '\0';
+    fclose(in);
     return 0;
 }
 

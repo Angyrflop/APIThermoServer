@@ -1,108 +1,85 @@
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include <sys/types.h>
+#include <microhttpd.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <microhttpd.h>
-#include <unistd.h>
+#include <sys/types.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include "hashmap.h"
+#include "ip_utils.h"
 #include "read_write_handler.h"
 #include "server_config.h"
-#include "ip_utils.h"
-#include "hashmap.h"
+#include "mime.h"
 
-static const char *HTML_INDEX = "<html><body><h1>Hello from microhttpd!</h1></body></html>";
-static const char *HTML_404 = "<html><body><h1>404 Not Found</h1></body></html>";
-
-static enum MHD_Result handler(
-    void *cls,
-    struct MHD_Connection *connection,
-    const char *url,
-    const char *method,
-    const char *version,
-    const char *upload_data,
-    size_t *upload_data_size,
-    void **con_cls)
+enum MHD_Result answer_to_connection (void *cls, struct MHD_Connection *connection,
+                          const char *url,
+                          const char *method, const char *version,
+                          const char *upload_data,
+                          size_t *upload_data_size, void **req_cls)
 {
-    const char *body;
-    unsigned int status;
-    hashmap_t *map = (hashmap_t *) cls;
+    const char *page  = "<html><body>Hello, browser!</body></html>";
+    const char *style = "\0";
+    struct MHD_Response *response;
+    enum MHD_Result ret;
+    const char *mimeType = mime_from_ext("html");
 
-    if (strcmp(url, HOMEPAGE) == 0) {
-        printf("'/' Called\n");
-        const union MHD_ConnectionInfo *info = 
-            MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
-        ipEntry entry;
-        ipEntry_init(&entry);
-        addIp(map, info);
-        body = HTML_INDEX;
-        status = MHD_HTTP_OK;
-    } else if (strcmp(url, "/bathroom") == 0) {
-        printf("'/bathrom' called\n");
-        body = HTML_INDEX;
-        status = MHD_HTTP_OK;
-    } else {
-        body = HTML_404;
-        status = MHD_HTTP_NOT_FOUND;
+    if (strcmp(method, "GET") != 0)
+        return MHD_NO;
+    
+    if (strcmp(url, "/") == 0) {
+        mimeType = mime_from_ext("html");
+    }
+    
+    if (strcmp(url, "/style.css") == 0) {
+        page = style;
+        mimeType = mime_from_ext("css");
     }
 
-    struct MHD_Response *response = MHD_create_response_from_buffer(
-            strlen(body), (void *)body, MHD_RESPMEM_PERSISTENT
-    );
+    response = MHD_create_response_from_buffer (strlen (page),
+                                            (void*) page, MHD_RESPMEM_PERSISTENT);
+    MHD_add_response_header(response, "Content-Type", mimeType);
+    ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+    MHD_destroy_response (response);
 
-    MHD_add_response_header(response, "Content-Type", "text/html; charset=utf-8");
-    MHD_add_response_header(response, "Access-Control-Allow-Origin", "*");
-
-    enum MHD_Result ret = MHD_queue_response(connection, status, response);
-    MHD_destroy_response(response);
     return ret;
 }
 
 int main() {
     hashmap_t map;
     hashmap_init(&map);
-    if (readIPFile(&map) == -1)
-    {
-        printf("[STARTUP] FAILED TO READ FILE!!!\n");
-        if (ABORT_IF_FILE_IS_EMPTY == true)
-            return -1;
+    
+    if ( READ_IP_ON_STARTUP == true) {
+        if (readIPFile(&map) != 0) {
+            printf("[ STARTUP]: Failed to read ips.bin!!!\n");
+            if ( ABORT_IF_FILE_IS_EMPTY == true)
+                return -1;
+        }
+    } else {
+        printf("[ STARTUP]: Not reading ips.bin\n");
     }
-    struct MHD_Daemon *daemon = MHD_start_daemon(
-            MHD_USE_INTERNAL_POLLING_THREAD,
-            PORT,
-            NULL, NULL,
-            &handler, &map,
-            MHD_OPTION_END
-    );
+    
+    struct MHD_Daemon *daemon;
 
-    if (!daemon) {
-        fprintf(stderr, "Failed to start daemon\n");
+    daemon = MHD_start_daemon(MHD_USE_INTERNAL_POLLING_THREAD, PORT, NULL, NULL,
+            &answer_to_connection, NULL, MHD_OPTION_END);
+    if (daemon == NULL)
         return -1;
-    }
 
-    printf("Listening on port %d...\n", PORT);
+    // Start daemon
+
     getchar();
 
-
-    for (size_t i = 0; i < map.capacity; i++) {
-        if (!map.slots[i].isOccupied)
-            continue;
-        printf("I[%zu]:\n", i);
-        if (map.slots[i].isIpv6 == true) {
-            char buf[INET6_ADDRSTRLEN];
-            inet_ntop(AF_INET6, &map.slots[i].address.ipv6, buf, sizeof(buf));
-            printf("IPv6: %s\n", buf);
-        } else {
-            char buf[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &map.slots[i].address.ipv4, buf, sizeof(buf));
-            printf("IPv4: %s\n", buf);
+    if (WRITE_IP_DURING_SHUTDOWN == true) {
+        if (writeIPFile(&map) != 0) {
+            printf("[SHUTDOWN]: Failed to write ips.bin!!!\n");
+            return -1;
         }
+    } else {
+        printf("[SHUTDOWN]: Not writting ips.bin\n");
     }
-    writeIPFile(&map);
-    hashmap_free(&map);
     MHD_stop_daemon(daemon);
-return 0;
+    hashmap_free(&map);
+    return 0;
 }

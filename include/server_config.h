@@ -11,5 +11,7 @@
 #define BEDROOM2_IP "127.0.0.4"
 
 #define ABORT_IF_FILE_IS_EMPTY false
+#define READ_IP_ON_STARTUP false
+#define WRITE_IP_DURING_SHUTDOWN false
 
 #endif /*SERVER_CONFIG_H*/
