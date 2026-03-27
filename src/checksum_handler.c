@@ -20,7 +20,7 @@ int genChecksum(const hashmap_t *map, uint8_t *checksum, unsigned int *checksumL
     for (size_t i = 0; i < map->capacity; i++) {
         if (!map->slots[i].isOccupied) 
             continue;
-        EVP_DigestUpdate(ctx, &map->slots[i], sizeof(ipEntry) * map->size);
+        EVP_DigestUpdate(ctx, &map->slots[i], sizeof(ipEntry));
     }
     if (!EVP_DigestFinal_ex(ctx, checksum, checksumLen)) {
         EVP_MD_CTX_free(ctx);

@@ -65,22 +65,3 @@ int readIPFile(hashmap_t *map)
     return 0;
 }
 
-int getStatic(char **file, char *fileName)
-{
-    FILE *in = fopen(fileName, "rb");
-    if (in == NULL)
-        return -1;
-    fseek(in, 0, SEEK_END);
-    long filesize = ftell(in);
-    rewind(in);
-    *file = malloc(filesize + 1);
-    if (*file == NULL) {
-        fclose(in);
-        return -1;
-    }
-    size_t bytesRead = fread(*file, 1, filesize, in);
-    (*file)[bytesRead] = '\0';
-    fclose(in);
-    return 0;
-}
-

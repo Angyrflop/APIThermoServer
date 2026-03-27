@@ -14,6 +14,7 @@ src/checksum_handler.c
 src/ip_utils.c
 src/hashmap.c
 src/mime.c
+src/url.c
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE include ${MHD_INCLUDE_DIRS})
