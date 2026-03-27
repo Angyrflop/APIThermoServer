@@ -16,7 +16,7 @@ Makefile
 *.a
 *.exe
 *.out
-
+*.env
 # IDE and editor files
 .vscode/
 .idea/

@@ -46,6 +46,7 @@ int readIPFile(hashmap_t *map)
     uint64_t rMagic;
     fread(&rMagic, sizeof(MAGIC), 1, in);
     if (rMagic != MAGIC) {
+        fprintf(stderr, "[      RW]: Magic numbers dont match!\n");
         fclose(in);
         return -1;
     }

@@ -59,9 +59,10 @@ int hashmap_resize(hashmap_t *map)
 {
     size_t tmpCapacity = map->capacity * 2;
     ipEntry *tmp = calloc(tmpCapacity, sizeof(ipEntry));
-    if (!tmp)
+    if (!tmp) {
+        fprintf(stderr, "[     MAP]: hashmap_resize: allocation failed, requested %zu slots\n", tmpCapacity);
         return -1;
-   
+    }
     for (size_t i = 0; i < map->capacity; i++) {
         if (!map->slots[i].isOccupied)
             continue;
@@ -139,6 +140,7 @@ int addIp(hashmap_t *map, const union MHD_ConnectionInfo *info)
         entry.isIpv6 = true;
         entry.address.ipv6 = addr6->sin6_addr;
     } else {
+        fprintf(stderr, "[     MAP]:Unkown IP address family tried to connect.\n");
         return -1;
     }
 

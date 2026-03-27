@@ -3,9 +3,9 @@
 #include "hashmap.h"
 #include "checksum_handler.h"
 #include <openssl/evp.h>
-#include <sched.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 int genChecksum(const hashmap_t *map, uint8_t *checksum, unsigned int *checksumLen)
 {
@@ -14,6 +14,7 @@ int genChecksum(const hashmap_t *map, uint8_t *checksum, unsigned int *checksumL
         return -1;
     if (!EVP_DigestInit_ex(ctx, EVP_sha256(), NULL)) {
         EVP_MD_CTX_free(ctx);
+        fprintf(stderr, "Failed to start EVP_DigestInit!\n");
         return -1;
     }
     EVP_DigestUpdate(ctx, &map->size, sizeof(size_t));
@@ -23,6 +24,7 @@ int genChecksum(const hashmap_t *map, uint8_t *checksum, unsigned int *checksumL
         EVP_DigestUpdate(ctx, &map->slots[i], sizeof(ipEntry));
     }
     if (!EVP_DigestFinal_ex(ctx, checksum, checksumLen)) {
+        fprintf(stderr, "EVP_DigestFinal failed!\n");
         EVP_MD_CTX_free(ctx);
         return -1;
     }

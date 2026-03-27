@@ -50,7 +50,11 @@ enum MHD_Result answer_to_connection (void *cls, struct MHD_Connection *connecti
         return MHD_NO;
     }
 
-    addIp(ctx->map, info);
+    if (addIp(ctx->map, info) != 0) {
+        fprintf(stderr, "Error during adding IP to hashmap.\n");
+        return MHD_NO;
+    }
+
 
     response = MHD_create_response_from_buffer (strlen (page),
                                             (void*) page, MHD_RESPMEM_PERSISTENT);
@@ -63,11 +67,14 @@ enum MHD_Result answer_to_connection (void *cls, struct MHD_Connection *connecti
 
 int main() {
     hashmap_t map;
-    hashmap_init(&map);
+    if (hashmap_init(&map) != 0) {
+        fprintf(stderr, "[ STARTUP]: Failed to allocate enough memory for hashmap!!!\nAborting!\n");
+        return -1;
+    }
     
     if ( READ_IP_ON_STARTUP == true) {
         if (readIPFile(&map) != 0) {
-            printf("[ STARTUP]: Failed to read ips.bin!!!\n");
+            fprintf(stderr, "[ STARTUP]: Failed to read ips.bin!!!\n");
             if ( ABORT_IF_FILE_IS_EMPTY == true)
                 return -1;
         }
@@ -100,13 +107,13 @@ int main() {
     for (size_t i = 0; i < map.capacity; i++) {
         if (!map.slots[i].isOccupied)
             continue;
-        printf("[%d]\n", i);
+        printf("[%d]\n", (int)i);
         printf("%s\n", map.slots[i].isIpv6 ? "true" : "false");
     }
 
     if (WRITE_IP_DURING_SHUTDOWN == true) {
         if (writeIPFile(&map) != 0) {
-            printf("[SHUTDOWN]: Failed to write ips.bin!!!\n");
+            fprintf(stderr, "[SHUTDOWN]: Failed to write ips.bin!!!\n");
             return -1;
         }
     } else {

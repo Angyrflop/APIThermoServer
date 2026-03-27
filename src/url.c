@@ -34,6 +34,7 @@ char *read_file(const char *filepath)
 
     char *buf = malloc(size + 1);
     if (!buf) {
+        fprintf(stderr, "Failed to allocate enough size for static, %s\n", filepath);
         fclose(in);
         return NULL;
     }
